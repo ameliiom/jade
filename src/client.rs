@@ -227,6 +227,7 @@ fn look_block(host: &dyn ClientHost, pos: [i32; 3], state: BlockState) -> Toolti
 
 fn look_entity(host: &dyn ClientHost, entity: EntityRef) -> Option<Tooltip> {
     let name = entity.name(host).unwrap_or_default();
+    let title = name.clone();
     let mut lines = vec![(name, Role::Title)];
     let mut items = Vec::new();
     let info = lock(&ENTITY_INFO);
@@ -277,7 +278,12 @@ fn look_entity(host: &dyn ClientHost, entity: EntityRef) -> Option<Tooltip> {
                     .villager_level
                     .map(|l| translated(host, &format!("merchant.level.{l}"), &l.to_string()))
                     .unwrap_or_default();
-                push("jade_horizon.villager", &[&job, &level], Role::Info);
+                // A villager with a job is already named after it: say the job once.
+                if job == title {
+                    push("jade_horizon.villager_level", &[&level], Role::Info);
+                } else {
+                    push("jade_horizon.villager", &[&job, &level], Role::Info);
+                }
             }
             if let Some(time) = info.conversion {
                 push("jade_horizon.curing", &[&duration(time)], Role::Good);
@@ -363,6 +369,10 @@ impl Tooltip {
             Position::Right => (screen_w - w * scale - MARGIN).round(),
         };
         let origin = [x, MARGIN];
+        // Right-to-left languages mirror the box: icon on the right, lines right-aligned,
+        // item rows and the bar filling from the right. `flip` maps an LTR box x to its place.
+        let rtl = right_to_left(host);
+        let flip = |x: f32, width: f32| if rtl { w - x - width } else { x };
 
         // The size setting goes through the GUI pose, which applies only inside one `gui_paint`
         // buffer: the frame, the lines and the bar go in one buffer, in box pixels, after a
@@ -381,7 +391,7 @@ impl Tooltip {
         let text_x = PAD + icon_room;
         let text_y = PAD + ((content_h - text_h) / 2.0).round();
         for (i, (text, role)) in self.lines.iter().enumerate() {
-            let at = [text_x, text_y + i as f32 * LINE];
+            let at = [flip(text_x, draw.text_width(text)), text_y + i as f32 * LINE];
             paint.text(text, at, theme.colour(*role), theme.shadow);
         }
 
@@ -390,7 +400,8 @@ impl Tooltip {
             let bar_y = items_y + items_room;
             let bar_w = w - 2.0 * PAD;
             paint.fill([PAD, bar_y, bar_w, BAR], theme.bar_back);
-            paint.fill([PAD, bar_y, (bar_w * progress).round(), BAR], theme.bar_fill);
+            let fill_w = (bar_w * progress).round();
+            paint.fill([flip(PAD, fill_w), bar_y, fill_w, BAR], theme.bar_fill);
         }
         paint.finish(draw);
 
@@ -398,12 +409,12 @@ impl Tooltip {
         let on_screen = |[bx, by]: [f32; 2]| [origin[0] + bx * scale, origin[1] + by * scale];
         if let Some(icon) = self.icon {
             let icon_y = PAD + ((content_h - ICON) / 2.0).round();
-            draw.item(icon, on_screen([PAD, icon_y]), ICON * scale);
+            draw.item(icon, on_screen([flip(PAD, ICON), icon_y]), ICON * scale);
         }
         let cell = |i: usize| {
             let cx = PAD + (i % ITEMS_PER_ROW) as f32 * CELL + 1.0;
             let cy = items_y + (i / ITEMS_PER_ROW) as f32 * CELL + 1.0;
-            [cx, cy]
+            [flip(cx, ICON), cy]
         };
         for (i, (key, _)) in self.items.iter().enumerate() {
             draw.item(*key, on_screen(cell(i)), ICON * scale);
@@ -422,6 +433,25 @@ impl Tooltip {
             counts.finish(draw);
         }
     }
+}
+
+/// Whether the player's language reads right to left. The game gives no direction flag, so
+/// this asks the language's own name (`language.name`, "العربية") and takes its first strong
+/// letter's direction, as Unicode's paragraph rule does: no list of languages to keep.
+fn right_to_left(host: &dyn ClientHost) -> bool {
+    host.translate("language.name").is_some_and(|name| starts_rtl(&name))
+}
+
+/// The direction of the first letter: true for the right-to-left scripts' blocks.
+fn starts_rtl(text: &str) -> bool {
+    text.chars().find(|c| c.is_alphabetic()).is_some_and(|c| {
+        matches!(c as u32,
+            0x0590..=0x08FF      // Hebrew, Arabic, Syriac, Thaana, NKo, Samaritan, Mandaic
+            | 0xFB1D..=0xFDFF    // Hebrew and Arabic presentation forms A
+            | 0xFE70..=0xFEFF    // Arabic presentation forms B
+            | 0x10800..=0x10FFF  // historic right-to-left scripts
+            | 0x1E800..=0x1EFFF) // Mende Kikakui, Adlam, Arabic mathematical
+    })
 }
 
 /// One `gui_paint` buffer drawn in box pixels: it opens with a pose that moves the box to
@@ -471,6 +501,17 @@ impl Painter {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn direction_follows_the_first_letter() {
+        assert!(starts_rtl("العربية"));
+        assert!(starts_rtl("עברית"));
+        assert!(starts_rtl("فارسی"));
+        assert!(!starts_rtl("English"));
+        assert!(!starts_rtl("Français"));
+        assert!(!starts_rtl("日本語"));
+        assert!(!starts_rtl(""));
+    }
 
     #[test]
     fn counts_shorten_past_a_thousand() {
