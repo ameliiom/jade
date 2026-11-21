@@ -1,6 +1,6 @@
 # Jade
 
-What you are looking at, for [Horizon](https://playhorizon.dev) (Minecraft: Java Edition 26.3 in Rust, mod API 0.2): a tooltip at the top of the screen for the block or entity under the crosshair. A WebAssembly mod, in English, French and Arabic; in a right-to-left language the box mirrors (icon on the right, lines and item rows from the right).
+What you are looking at, for [Horizon](https://playhorizon.dev) (Minecraft: Java Edition 26.3 in Rust, mod API 0.2): a tooltip at the top of the screen for the block or entity under the crosshair. A native mod, in English, French and Arabic; in a right-to-left language the box mirrors (icon on the right, lines and item rows from the right).
 
 ## Screenshots
 
@@ -37,19 +37,20 @@ Health, animal, villager and horse data, effects, contents and furnace/brewing p
 
 ## Install
 
-1. Copy `jade.hmod` into `%APPDATA%\horizon\horizon-mods\`.
+1. Copy `jade.hmod` into `%APPDATA%\horizon\horizon-native-mods\`.
 2. Add the line `mod.jade:true` to `%APPDATA%\horizon\horizon-mods.txt`.
-3. Restart Horizon.
+3. Build: in the launcher's Mods page press **Build**, or run `horizon-launcher native-build --instance horizon --trust-native-code`. A native mod runs with your rights: install it only from a source you trust.
+4. Play.
 
-Built for Horizon Nightly `f037744` (2026-11-21). For multiplayer, install it on the client; on the server too for the server-only lines.
+Built for Horizon Nightly `f037744` (2026-11-21).
 
 ## Build
 
 ```powershell
-cargo horizon-mod build --wasm
+cargo horizon-mod build
 ```
 
-The result is `target\horizon-mod\jade.hmod`.
+The source package is `target\horizon-mod\jade.hmod`; the launcher compiles it (step 3 above).
 
 ## Licence and credits
 

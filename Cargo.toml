@@ -1,6 +1,6 @@
 [package]
 name = "mod-jade"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 license = "CC-BY-NC-SA-4.0"
 
@@ -8,6 +8,3 @@ license = "CC-BY-NC-SA-4.0"
 # The pinned SDK's API crate, fetched into .horizon/sdk/ by any `cargo horizon-mod` command.
 horizon-mod-api = { path = ".horizon/sdk/api/crates/horizon-mod-api" }
 
-# The SDK build this mod is made for: `cargo horizon-mod update` moves it.
-[package.metadata.horizon]
-sdk = "f037744a79f9982c47876f49c5a3067279f88706"

@@ -1,6 +1,6 @@
 id = "jade"
 name = "Jade"
-version = "0.2.0"
+version = "0.3.0"
 description = "Shows what you are looking at: the block or entity under the crosshair, its mod, health, growth, contents and more. Arabic and right-to-left languages included."
 authors = ["ameliiom"]
 credits = "Adapted from Jade by Snownee and contributors and from jade-horizon by Pierddev (CC BY-NC-SA 4.0)."
@@ -10,6 +10,7 @@ api = "0.2"
 side = "both"
 capabilities = ["registries"]
 
-[wasm]
-sha512 = "5f26b73ce9d6287a66ba2e04f05ebb95b5f78187e7a68498bcbc7a96b3d8958eb7f2be8b6e77ae74b1172910f5c4e10f14ec1ed7b4e32842698cf8bf9666a138"
-toolchain = "1.99.1 58cf8f9c35b355199727627d07ae34a4e2846d67"
+[native]
+game = "26.3"
+horizon = "f037744a79f9982c47876f49c5a3067279f88706"
+mixins = "e59da9094f0c2fdda6c627fe9eff22dec6a906f0"
