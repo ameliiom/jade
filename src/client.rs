@@ -90,9 +90,9 @@ fn look_block(host: &dyn ClientHost, pos: [i32; 3], state: BlockState) -> Toolti
         && max > 0
     {
         if age >= max {
-            push("jade_horizon.mature", &[], Role::Good);
+            push("jade.mature", &[], Role::Good);
         } else {
-            push("jade_horizon.growth", &[&format!("{}%", age * 100 / max)], Role::Info);
+            push("jade.growth", &[&format!("{}%", age * 100 / max)], Role::Info);
         }
     }
 
@@ -106,31 +106,31 @@ fn look_block(host: &dyn ClientHost, pos: [i32; 3], state: BlockState) -> Toolti
             }
         };
         match path {
-            "beehive" | "bee_nest" => lvl("jade_horizon.honey", "honey_level"),
-            "composter" => lvl("jade_horizon.compost", "level"),
-            "respawn_anchor" => lvl("jade_horizon.charges", "charges"),
-            "farmland" => lvl("jade_horizon.moisture", "moisture"),
-            "turtle_egg" | "sniffer_egg" => lvl("jade_horizon.hatch", "hatch"),
+            "beehive" | "bee_nest" => lvl("jade.honey", "honey_level"),
+            "composter" => lvl("jade.compost", "level"),
+            "respawn_anchor" => lvl("jade.charges", "charges"),
+            "farmland" => lvl("jade.moisture", "moisture"),
+            "turtle_egg" | "sniffer_egg" => lvl("jade.hatch", "hatch"),
             "redstone_wire" | "daylight_detector" | "target" | "sculk_sensor"
             | "calibrated_sculk_sensor" | "weighted_pressure_plate" => {
                 if let Some((power, _)) = number_of("power") {
-                    push("jade_horizon.power", &[&power.to_string()], Role::Info);
+                    push("jade.power", &[&power.to_string()], Role::Info);
                 }
             }
             "repeater" => {
                 if let Some(delay) = text_of("delay") {
-                    push("jade_horizon.delay", &[&delay], Role::Info);
+                    push("jade.delay", &[&delay], Role::Info);
                 }
             }
             "comparator" => {
                 if let Some(mode) = text_of("mode") {
-                    push(&format!("jade_horizon.comparator.{mode}"), &[], Role::Info);
+                    push(&format!("jade.comparator.{mode}"), &[], Role::Info);
                 }
             }
             "lever" => {
                 let on = text_of("powered").as_deref() == Some("true");
                 push(
-                    if on { "jade_horizon.on" } else { "jade_horizon.off" },
+                    if on { "jade.on" } else { "jade.off" },
                     &[],
                     if on { Role::Good } else { Role::Bad },
                 );
@@ -139,13 +139,13 @@ fn look_block(host: &dyn ClientHost, pos: [i32; 3], state: BlockState) -> Toolti
                 if let Some((note, _)) = number_of("note") {
                     let instrument = text_of("instrument").map(|i| words(&i)).unwrap_or_default();
                     let text = format!("{} ({note}) \u{2013} {instrument}", note_name(note));
-                    push("jade_horizon.note", &[&text], Role::Info);
+                    push("jade.note", &[&text], Role::Info);
                 }
             }
             "cake" => {
                 if let Some((bites, max)) = number_of("bites") {
                     let left = (max + 1 - bites).to_string();
-                    push("jade_horizon.slices", &[&left, &(max + 1).to_string()], Role::Info);
+                    push("jade.slices", &[&left, &(max + 1).to_string()], Role::Info);
                 }
             }
             _ => {}
@@ -156,29 +156,29 @@ fn look_block(host: &dyn ClientHost, pos: [i32; 3], state: BlockState) -> Toolti
     if let Some(info) = lock(&BLOCK_INFO).as_ref().filter(|i| [i.x, i.y, i.z] == pos) {
         if s::on(host, s::WORK) {
             if let Some(f) = info.cooking {
-                push("jade_horizon.cooking", &[&percent(f)], Role::Info);
+                push("jade.cooking", &[&percent(f)], Role::Info);
             }
             if let Some(f) = info.brewing {
-                push("jade_horizon.brewing", &[&percent(f)], Role::Info);
+                push("jade.brewing", &[&percent(f)], Role::Info);
             }
         }
         if s::on(host, s::BLOCK_STATES) {
             if let Some(mob) = &info.spawner {
-                push("jade_horizon.spawner", &[&id_name(host, "entity", mob)], Role::Info);
+                push("jade.spawner", &[&id_name(host, "entity", mob)], Role::Info);
             }
             if let Some(bees) = info.bees {
-                push("jade_horizon.bees", &[&bees.to_string()], Role::Info);
+                push("jade.bees", &[&bees.to_string()], Role::Info);
             }
             if let Some(record) = &info.record {
                 let (ns, disc) = record.split_once(':').unwrap_or(("minecraft", record));
                 let song = disc.strip_prefix("music_disc_").unwrap_or(disc);
                 let name = translated(host, &format!("jukebox_song.{ns}.{song}"), song);
-                push("jade_horizon.record", &[&name], Role::Info);
+                push("jade.record", &[&name], Role::Info);
             }
         }
         if s::on(host, s::CONTAINERS) {
             if info.loot {
-                push("jade_horizon.loot", &[], Role::Info);
+                push("jade.loot", &[], Role::Info);
             }
             items = info
                 .items
@@ -200,9 +200,9 @@ fn look_block(host: &dyn ClientHost, pos: [i32; 3], state: BlockState) -> Toolti
             .and_then(|stack| states.is_correct_tool_for_drops(state, stack))
             .unwrap_or(false);
         if ok {
-            push("jade_horizon.harvestable", &[], Role::Good);
+            push("jade.harvestable", &[], Role::Good);
         } else {
-            push("jade_horizon.wrong_tool", &[], Role::Bad);
+            push("jade.wrong_tool", &[], Role::Bad);
         }
     }
     if s::on(host, s::MOD_NAME) {
@@ -237,37 +237,37 @@ fn look_entity(host: &dyn ClientHost, entity: EntityRef) -> Option<Tooltip> {
         if s::on(host, s::HEALTH)
             && let (Some(health), Some(max)) = (info.health, info.max_health)
         {
-            push("jade_horizon.health", &[&number(health), &number(max)], Role::Health);
+            push("jade.health", &[&number(health), &number(max)], Role::Health);
         }
         if s::on(host, s::OWNER)
             && let Some(owner) = &info.owner
         {
-            push("jade_horizon.owner", &[owner], Role::Info);
+            push("jade.owner", &[owner], Role::Info);
         }
         if s::on(host, s::MOUNTS) {
             if let Some(speed) = info.speed {
-                push("jade_horizon.speed", &[&number(speed)], Role::Info);
+                push("jade.speed", &[&number(speed)], Role::Info);
             }
             if let Some(jump) = info.jump {
-                push("jade_horizon.jump", &[&number(jump)], Role::Info);
+                push("jade.jump", &[&number(jump)], Role::Info);
             }
             if let Some(strength) = info.strength {
-                push("jade_horizon.strength", &[&strength.to_string()], Role::Info);
+                push("jade.strength", &[&strength.to_string()], Role::Info);
             }
         }
         if s::on(host, s::ANIMALS) {
             match info.age {
-                Some(age) if age < 0 => push("jade_horizon.grows_up", &[&duration(-age)], Role::Info),
+                Some(age) if age < 0 => push("jade.grows_up", &[&duration(-age)], Role::Info),
                 Some(age) if age > 0 => {
-                    push("jade_horizon.breed_cooldown", &[&duration(age)], Role::Info)
+                    push("jade.breed_cooldown", &[&duration(age)], Role::Info)
                 }
                 _ => {}
             }
             if info.in_love.is_some() {
-                push("jade_horizon.in_love", &[], Role::Love);
+                push("jade.in_love", &[], Role::Love);
             }
             if let Some(egg) = info.egg.filter(|t| *t > 0) {
-                push("jade_horizon.next_egg", &[&duration(egg)], Role::Info);
+                push("jade.next_egg", &[&duration(egg)], Role::Info);
             }
         }
         if s::on(host, s::VILLAGERS) {
@@ -280,17 +280,17 @@ fn look_entity(host: &dyn ClientHost, entity: EntityRef) -> Option<Tooltip> {
                     .unwrap_or_default();
                 // A villager with a job is already named after it: say the job once.
                 if job == title {
-                    push("jade_horizon.villager_level", &[&level], Role::Info);
+                    push("jade.villager_level", &[&level], Role::Info);
                 } else {
-                    push("jade_horizon.villager", &[&job, &level], Role::Info);
+                    push("jade.villager", &[&job, &level], Role::Info);
                 }
             }
             if let Some(time) = info.conversion {
-                push("jade_horizon.curing", &[&duration(time)], Role::Good);
+                push("jade.curing", &[&duration(time)], Role::Good);
             }
         }
         if let Some(fuse) = info.fuse {
-            push("jade_horizon.fuse", &[&number(fuse as f32 / 20.0)], Role::Bad);
+            push("jade.fuse", &[&number(fuse as f32 / 20.0)], Role::Bad);
         }
         if s::on(host, s::EFFECTS) {
             for effect in &info.effects {

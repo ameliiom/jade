@@ -1,6 +1,6 @@
 [package]
-name = "mod-jade_horizon"
-version = "0.1.1"
+name = "mod-jade"
+version = "0.2.0"
 edition = "2024"
 license = "CC-BY-NC-SA-4.0"
 

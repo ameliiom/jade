@@ -152,7 +152,7 @@ fn contents(data: &Compound, locked: bool) -> Vec<ItemCount> {
 
 // --- Answers ---------------------------------------------------------------------------------
 
-/// `jade_horizon:peek_entity`.
+/// `jade:peek_entity`.
 pub fn answer_entity(value: PeekEntity, cx: &mut dyn IPayloadContext) -> Result<(), String> {
     let player = cx.player().map_err(|e| format!("{e:?}"))?;
     let host = cx.server_host().map_err(|e| format!("{e:?}"))?;
@@ -218,13 +218,13 @@ pub fn answer_entity(value: PeekEntity, cx: &mut dyn IPayloadContext) -> Result<
     };
     ANSWER_ENTITY
         .get()
-        .ok_or("jade_horizon: entity reply channel not registered")?
+        .ok_or("jade: entity reply channel not registered")?
         .reply(cx, &reply)
         .map(drop)
         .map_err(|e| format!("{e:?}"))
 }
 
-/// `jade_horizon:peek_block`.
+/// `jade:peek_block`.
 pub fn answer_block(value: PeekBlock, cx: &mut dyn IPayloadContext) -> Result<(), String> {
     let player = cx.player().map_err(|e| format!("{e:?}"))?;
     let host = cx.server_host().map_err(|e| format!("{e:?}"))?;
@@ -287,7 +287,7 @@ pub fn answer_block(value: PeekBlock, cx: &mut dyn IPayloadContext) -> Result<()
     };
     ANSWER_BLOCK
         .get()
-        .ok_or("jade_horizon: block reply channel not registered")?
+        .ok_or("jade: block reply channel not registered")?
         .reply(cx, &reply)
         .map(drop)
         .map_err(|e| format!("{e:?}"))

@@ -1,4 +1,4 @@
-//! Jade for Horizon: shows what the crosshair is on, at the top of the screen.
+//! Jade: shows what the crosshair is on, at the top of the screen.
 //!
 //! An unofficial port of Snownee's Jade (NeoForge) to Horizon's WebAssembly mod API. Jade's Java
 //! code can't run in Horizon, so this is a rewrite of its features on Horizon's hooks.
@@ -10,7 +10,7 @@
 //! data providers do. On a server without this mod those lines are simply missing.
 //!
 //! Options (theme, position, size, which lines show) are Horizon mod settings
-//! (`settings.rs`), edited in Options > Mods > Jade for Horizon > Config.
+//! (`settings.rs`), edited in Options > Mods > Jade > Config.
 mod client;
 mod payloads;
 mod server;
@@ -29,8 +29,8 @@ use payloads::*;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Mutex;
 
-pub(crate) const MOD_ID: &str = "jade_horizon";
-const LAYER: &str = "jade_horizon:overlay";
+pub(crate) const MOD_ID: &str = "jade";
+const LAYER: &str = "jade:overlay";
 const TOGGLE: &str = "toggle";
 
 /// How often (client ticks) the client asks the server about its target.
@@ -54,7 +54,7 @@ pub struct Mod;
 impl Hooks for Mod {
     fn register(&self, r: &mut dyn Registrar, _cx: &RegistrationContext) {
         let mut toggle = KeyRegistration::new(TOGGLE, "key.keyboard.keypad.0");
-        toggle.label = "key.jade_horizon.toggle".into();
+        toggle.label = "key.jade.toggle".into();
         r.register_key_mapping(toggle);
 
         // A refused setting only means its row is missing; its read falls back to the default.
@@ -65,22 +65,22 @@ impl Hooks for Mod {
         let mut payloads = r.payload_handlers();
         let mut view = payloads.registrar("3").optional();
         let ask_entity = view.play_to_server_typed::<PeekEntity>(
-            PayloadId("jade_horizon:peek_entity".into()),
+            PayloadId("jade:peek_entity".into()),
             server::answer_entity,
         );
         let answer_entity = view.play_to_client_typed::<EntityInfo>(
-            PayloadId("jade_horizon:entity_info".into()),
+            PayloadId("jade:entity_info".into()),
             |value, _| {
                 *lock(&ENTITY_INFO) = Some(value);
                 Ok(())
             },
         );
         let ask_block = view.play_to_server_typed::<PeekBlock>(
-            PayloadId("jade_horizon:peek_block".into()),
+            PayloadId("jade:peek_block".into()),
             server::answer_block,
         );
         let answer_block = view.play_to_client_typed::<BlockInfo>(
-            PayloadId("jade_horizon:block_info".into()),
+            PayloadId("jade:block_info".into()),
             |value, _| {
                 *lock(&BLOCK_INFO) = Some(value);
                 Ok(())

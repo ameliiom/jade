@@ -41,21 +41,21 @@ pub fn specs() -> Vec<SettingSpec> {
     let mut specs = vec![
         SettingSpec::choice(
             THEME,
-            "jade_horizon.config.theme",
-            ["vanilla", "dark", "light", "waila"].map(|t| format!("jade_horizon.config.theme.{t}")),
+            "jade.config.theme",
+            ["vanilla", "dark", "light", "waila"].map(|t| format!("jade.config.theme.{t}")),
             0,
         ),
         SettingSpec::choice(
             POSITION,
-            "jade_horizon.config.position",
+            "jade.config.position",
             ["top_center", "top_left", "top_right"]
-                .map(|p| format!("jade_horizon.config.position.{p}")),
+                .map(|p| format!("jade.config.position.{p}")),
             0,
         ),
-        SettingSpec::range(SCALE, "jade_horizon.config.scale", 0.5, 2.0, 0.1, 1.0),
+        SettingSpec::range(SCALE, "jade.config.scale", 0.5, 2.0, 0.1, 1.0),
     ];
     for key in TOGGLES {
-        specs.push(SettingSpec::toggle(*key, format!("jade_horizon.config.{key}"), true));
+        specs.push(SettingSpec::toggle(*key, format!("jade.config.{key}"), true));
     }
     specs
 }
