@@ -8,6 +8,10 @@ What you are looking at, for [Horizon](https://playhorizon.dev) (Minecraft: Java
 | --- | --- | --- |
 | ![A grass block with its name and mod](docs/screenshots/block.png) | ![Wheat with its growth percentage](docs/screenshots/crop-growth.png) | ![A furnace with its cooking progress](docs/screenshots/furnace.png) |
 
+A villager's trades (in Arabic the box mirrors, so the arrows point left; the used-up bread trade's arrow is red):
+
+![A farmer's six trades as icons in the tooltip](docs/screenshots/villager-trades-ar.png)
+
 ## What it shows
 
 - **Block**: icon, name (in the game's language), originating mod, and depending on the block:
@@ -23,7 +27,7 @@ What you are looking at, for [Horizon](https://playhorizon.dev) (Minecraft: Java
   - animals: time until adulthood, until they can breed again, love mode, next egg (chickens);
   - tamed animals: owner;
   - horses, donkeys, mules, llamas: speed (blocks/s), jump height (blocks), llama strength;
-  - villagers: level (and profession when the name doesn't already say it); a zombie villager being cured: time left;
+  - villagers: level (and profession when the name doesn't already say it), and their first 6 trades as icons, one row each: cost (one or two) → result with counts, a red arrow when out of stock (a villager nobody has traded with has none yet); a zombie villager being cured: time left;
   - active effects (name, level, duration);
   - item frame: the item it holds; primed TNT: time until it explodes.
 
@@ -33,7 +37,7 @@ What you are looking at, for [Horizon](https://playhorizon.dev) (Minecraft: Java
 
 **Options > Mods > Jade > Config**: theme (Vanilla, Dark, Light, Waila), position (top centre, left, right), size (0.5 to 2), and one toggle per kind of information.
 
-Health, animal, villager and horse data, effects, contents and furnace/brewing progress are known only to the server: the mod asks for them a few times per second, for a target within 24 blocks. On a server without this mod the tooltip still works, without those lines.
+Health, animal, villager and horse data, trades, effects, contents and furnace/brewing progress are known only to the server: the mod asks for them a few times per second, for a target within 24 blocks. On a server without this mod the tooltip still works, without those lines.
 
 ## Install
 

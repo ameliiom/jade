@@ -15,6 +15,7 @@ pub const ANIMALS: &str = "show_animals";
 pub const MOUNTS: &str = "show_mounts";
 pub const OWNER: &str = "show_owner";
 pub const VILLAGERS: &str = "show_villagers";
+pub const TRADES: &str = "show_trades";
 pub const EFFECTS: &str = "show_effects";
 
 const TOGGLES: &[&str] = &[
@@ -30,6 +31,7 @@ const TOGGLES: &[&str] = &[
     MOUNTS,
     OWNER,
     VILLAGERS,
+    TRADES,
     EFFECTS,
 ];
 

@@ -173,6 +173,19 @@ pub fn answer_entity(value: PeekEntity, cx: &mut dyn IPayloadContext) -> Result<
     };
     let data = entity.nbt(host).unwrap_or_default();
     let read: &dyn Host = &*host;
+    let stack = |s: &mod_api::ItemStack| ItemCount { id: s.item().id(read), count: s.count() as i32 };
+    // Offers no one has rolled yet (nobody traded) read as empty: nothing to show.
+    let trades = host
+        .merchant(entity)
+        .and_then(|m| m.offers(read))
+        .map(|offers| {
+            capped(offers.iter().map(|o| TradeInfo {
+                costs: std::iter::once(&o.base_cost_a).chain(o.cost_b.as_ref()).map(|c| stack(&c.stack)).collect(),
+                result: stack(&o.result),
+                out: o.uses >= o.max_uses,
+            }))
+        })
+        .unwrap_or_default();
 
     // A tadpole's `Age` counts up to becoming a frog, not the ageable-mob convention; an
     // item entity's `Age` is its despawn timer.
@@ -214,6 +227,7 @@ pub fn answer_entity(value: PeekEntity, cx: &mut dyn IPayloadContext) -> Result<
         fuse: int(&data, "fuse").filter(|_| kind == "minecraft:tnt"),
         effects,
         item: compound(&data, "Item").and_then(item),
+        trades,
         kind,
     };
     ANSWER_ENTITY

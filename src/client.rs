@@ -36,12 +36,31 @@ const VANILLA_CROPS: &[&str] = &[
 ];
 
 /// What the overlay shows: an optional icon, lines of text, a row of items (container
-/// contents, an item frame's item) and an optional progress bar (mining).
+/// contents, an item frame's item), a villager's trades and an optional progress bar (mining).
 pub struct Tooltip {
     icon: Option<ItemKey>,
     lines: Vec<(String, Role)>,
     items: Vec<(ItemKey, i32)>,
+    trades: Vec<Trade>,
     bar: Option<f32>,
+}
+
+/// One trade row: its costs (one or two), its result, and whether it is out of stock.
+pub struct Trade {
+    costs: Vec<(ItemKey, i32)>,
+    result: (ItemKey, i32),
+    out: bool,
+}
+
+/// A trade row's cells, left to right in a left-to-right language: the costs' cells, the
+/// arrow's and the result's.
+fn trade_cells(costs: usize) -> (std::ops::Range<usize>, usize, usize) {
+    (0..costs, costs, costs + 1)
+}
+
+/// The arrow between a trade's costs and its result: it points the way the row reads.
+fn trade_arrow(rtl: bool) -> &'static str {
+    if rtl { "←" } else { "→" }
 }
 
 /// The tooltip for what the crosshair is on, or None when it's on nothing.
@@ -221,6 +240,7 @@ fn look_block(host: &dyn ClientHost, pos: [i32; 3], state: BlockState) -> Toolti
         icon: host.block_item(block),
         lines,
         items,
+        trades: Vec::new(),
         bar,
     }
 }
@@ -230,6 +250,7 @@ fn look_entity(host: &dyn ClientHost, entity: EntityRef) -> Option<Tooltip> {
     let title = name.clone();
     let mut lines = vec![(name, Role::Title)];
     let mut items = Vec::new();
+    let mut trades = Vec::new();
     let info = lock(&ENTITY_INFO);
     if let Some(info) = info.as_ref().filter(|i| i.id.0 as u32 == entity.id()) {
         let mut push =
@@ -289,6 +310,20 @@ fn look_entity(host: &dyn ClientHost, entity: EntityRef) -> Option<Tooltip> {
                 push("jade.curing", &[&duration(time)], Role::Good);
             }
         }
+        if s::on(host, s::TRADES) {
+            let key = |i: &crate::payloads::ItemCount| Some((item_key(host, &i.id)?, i.count));
+            trades = info
+                .trades
+                .iter()
+                .filter_map(|t| {
+                    Some(Trade {
+                        costs: t.costs.iter().map(key).collect::<Option<_>>()?,
+                        result: key(&t.result)?,
+                        out: t.out,
+                    })
+                })
+                .collect();
+        }
         if let Some(fuse) = info.fuse {
             push("jade.fuse", &[&number(fuse as f32 / 20.0)], Role::Bad);
         }
@@ -322,6 +357,7 @@ fn look_entity(host: &dyn ClientHost, entity: EntityRef) -> Option<Tooltip> {
         icon: None,
         lines,
         items,
+        trades,
         bar: None,
     })
 }
@@ -358,9 +394,11 @@ impl Tooltip {
         let items_w = self.items.len().min(ITEMS_PER_ROW) as f32 * CELL;
         let items_h = rows as f32 * CELL;
         let items_room = if rows > 0 { items_h + 3.0 } else { 0.0 };
+        let trades_w = self.trades.iter().map(|t| t.costs.len() + 2).max().unwrap_or(0) as f32 * CELL;
+        let trades_room = if self.trades.is_empty() { 0.0 } else { self.trades.len() as f32 * CELL + 3.0 };
         let bar_room = if self.bar.is_some() { BAR + 3.0 } else { 0.0 };
-        let w = (icon_room + text_w).max(items_w) + 2.0 * PAD;
-        let h = content_h + items_room + bar_room + 2.0 * PAD;
+        let w = (icon_room + text_w).max(items_w).max(trades_w) + 2.0 * PAD;
+        let h = content_h + items_room + trades_room + bar_room + 2.0 * PAD;
 
         let [screen_w, _] = draw.size();
         let x = match s::position(host) {
@@ -396,8 +434,26 @@ impl Tooltip {
         }
 
         let items_y = PAD + content_h + 3.0;
+        // Trades: one row each, cells from the left (from the right in a right-to-left language).
+        let trades_y = PAD + content_h + items_room + 3.0;
+        let trade_cell = |row: usize, slot: usize| {
+            [flip(PAD + slot as f32 * CELL + 1.0, ICON), trades_y + row as f32 * CELL + 1.0]
+        };
+        let mut icons: Vec<([f32; 2], ItemKey, i32)> = Vec::new();
+        let arrow = trade_arrow(rtl);
+        let arrow_w = draw.text_width(arrow);
+        for (row, t) in self.trades.iter().enumerate() {
+            let (costs, arrow_slot, result_slot) = trade_cells(t.costs.len());
+            for (slot, (key, count)) in costs.zip(&t.costs) {
+                icons.push((trade_cell(row, slot), *key, *count));
+            }
+            let [ax, ay] = trade_cell(row, arrow_slot);
+            let colour = theme.colour(if t.out { Role::Bad } else { Role::Info });
+            paint.text(arrow, [ax + (ICON - arrow_w) / 2.0, ay + 4.0], colour, theme.shadow);
+            icons.push((trade_cell(row, result_slot), t.result.0, t.result.1));
+        }
         if let Some(progress) = self.bar {
-            let bar_y = items_y + items_room;
+            let bar_y = items_y + items_room + trades_room;
             let bar_w = w - 2.0 * PAD;
             paint.fill([PAD, bar_y, bar_w, BAR], theme.bar_back);
             let fill_w = (bar_w * progress).round();
@@ -416,15 +472,22 @@ impl Tooltip {
             let cy = items_y + (i / ITEMS_PER_ROW) as f32 * CELL + 1.0;
             [flip(cx, ICON), cy]
         };
-        for (i, (key, _)) in self.items.iter().enumerate() {
-            draw.item(*key, on_screen(cell(i)), ICON * scale);
+        let icons: Vec<([f32; 2], ItemKey, i32)> = self
+            .items
+            .iter()
+            .enumerate()
+            .map(|(i, (key, count))| (cell(i), *key, *count))
+            .chain(icons)
+            .collect();
+        for (at, key, _) in &icons {
+            draw.item(*key, on_screen(*at), ICON * scale);
         }
         // Counts over the icons, bottom-right as vanilla's.
-        if self.items.iter().any(|(_, count)| *count > 1) {
+        if icons.iter().any(|(_, _, count)| *count > 1) {
             let mut counts = Painter::new(origin, scale);
-            for (i, (_, count)) in self.items.iter().enumerate() {
+            for (at, _, count) in &icons {
                 if *count > 1 {
-                    let [cx, cy] = cell(i);
+                    let [cx, cy] = *at;
                     let label = count_text(*count);
                     let lw = draw.text_width(&label);
                     counts.text(&label, [cx + ICON + 1.0 - lw, cy + 9.0], 0xFFFF_FFFF, true);
@@ -511,6 +574,20 @@ mod tests {
         assert!(!starts_rtl("Français"));
         assert!(!starts_rtl("日本語"));
         assert!(!starts_rtl(""));
+    }
+
+    #[test]
+    fn a_trade_row_reads_costs_arrow_result() {
+        assert_eq!(trade_cells(1), (0..1, 1, 2));
+        assert_eq!(trade_cells(2), (0..2, 2, 3));
+        assert_eq!(trade_arrow(false), "→");
+        assert_eq!(trade_arrow(true), "←");
+    }
+
+    #[test]
+    fn trades_are_capped_in_their_order() {
+        assert_eq!(crate::payloads::capped(1..=10), vec![1, 2, 3, 4, 5, 6]);
+        assert_eq!(crate::payloads::capped(vec![7, 8]), vec![7, 8]);
     }
 
     #[test]

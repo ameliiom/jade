@@ -61,5 +61,6 @@
   "jade.config.show_mounts": "Horse stats",
   "jade.config.show_owner": "Tamed animal owner",
   "jade.config.show_villagers": "Villager profession and level",
+  "jade.config.show_trades": "Villager trades",
   "jade.config.show_effects": "Mob effects"
 }

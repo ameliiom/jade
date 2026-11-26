@@ -1,5 +1,5 @@
 //! The two client → server questions and their answers, and the client's copy of the last
-//! answers. Registered (version "3", optional) in `Hooks::register`.
+//! answers. Registered (version "4", optional: 4 added villager trades) in `Hooks::register`.
 use mod_api::{PayloadCodec, ToClient, ToServer, VarInt};
 use std::sync::{Mutex, OnceLock};
 
@@ -22,6 +22,15 @@ pub struct EffectInfo {
     pub id: String,
     pub amplifier: i32,
     pub duration: i32,
+}
+
+/// A merchant's trade: what it costs (one or two items), what it gives, and whether it is out
+/// of stock.
+#[derive(PayloadCodec, Clone)]
+pub struct TradeInfo {
+    pub costs: Vec<ItemCount>,
+    pub result: ItemCount,
+    pub out: bool,
 }
 
 /// What the server knows about entity `id`. Every field but `id` and `kind` is optional: each
@@ -56,6 +65,16 @@ pub struct EntityInfo {
     pub effects: Vec<EffectInfo>,
     /// Item frame: the item it holds.
     pub item: Option<ItemCount>,
+    /// A villager's or wandering trader's first `MAX_TRADES` trades, in the trading screen's order.
+    pub trades: Vec<TradeInfo>,
+}
+
+/// Trades shown at most: the first six of the trading screen's list.
+pub const MAX_TRADES: usize = 6;
+
+/// The first `MAX_TRADES` of a merchant's offers, in their order.
+pub fn capped<T>(offers: impl IntoIterator<Item = T>) -> Vec<T> {
+    offers.into_iter().take(MAX_TRADES).collect()
 }
 
 /// "Tell me about the block entity at this position."

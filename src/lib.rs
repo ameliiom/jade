@@ -63,7 +63,7 @@ impl Hooks for Mod {
         }
 
         let mut payloads = r.payload_handlers();
-        let mut view = payloads.registrar("3").optional();
+        let mut view = payloads.registrar("4").optional();
         let ask_entity = view.play_to_server_typed::<PeekEntity>(
             PayloadId("jade:peek_entity".into()),
             server::answer_entity,

@@ -61,5 +61,6 @@
   "jade.config.show_mounts": "إحصاءات الخيل",
   "jade.config.show_owner": "مالك الحيوان",
   "jade.config.show_villagers": "مهنة القروي",
+  "jade.config.show_trades": "عروض القروي",
   "jade.config.show_effects": "التأثيرات"
 }

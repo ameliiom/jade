@@ -61,5 +61,6 @@
   "jade.config.show_mounts": "Statistiques des chevaux",
   "jade.config.show_owner": "Propriétaire des animaux apprivoisés",
   "jade.config.show_villagers": "Métier et niveau des villageois",
+  "jade.config.show_trades": "Échanges des villageois",
   "jade.config.show_effects": "Effets des créatures"
 }
