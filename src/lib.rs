@@ -11,6 +11,14 @@
 //!
 //! Options (theme, position, size, which lines show) are Horizon mod settings
 //! (`settings.rs`), edited in Options > Mods > Jade > Config.
+// Kit (ameliiom/kit), the shared code: the installed Kit mod, or its source in place for
+// local builds (`kit_local`, horizon-mods/.cargo/config.toml).
+#[cfg(kit_local)]
+#[allow(dead_code)]
+#[path = "../../kit/src/lib.rs"]
+mod kit;
+#[cfg(not(kit_local))]
+use ::kit;
 mod client;
 mod payloads;
 mod server;
@@ -43,9 +51,7 @@ pub(crate) static TICKS: AtomicU32 = AtomicU32::new(0);
 /// The client's last mining prediction: block, break fraction, tick it was seen.
 pub(crate) static MINING: Mutex<Option<([i32; 3], f32, u32)>> = Mutex::new(None);
 
-pub(crate) fn lock<T>(m: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
-    m.lock().unwrap_or_else(|e| e.into_inner())
-}
+pub(crate) use kit::sync::lock;
 
 #[derive(Default)]
 pub struct Mod;

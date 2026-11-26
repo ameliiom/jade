@@ -5,7 +5,7 @@ use crate::text::*;
 use crate::{lock, MINING, TICKS};
 use mod_api::{
     BlockState, ClientHost, CrosshairTarget, DrawContext, EntityRef, GuiDraw, Hand,
-    HostBlockStates, Identifier, ItemKey, Text,
+    HostBlockStates, ItemKey, Text,
 };
 #[allow(unused_imports)]
 use mod_api::prelude::*;
@@ -74,9 +74,7 @@ pub fn look(host: &dyn ClientHost) -> Option<Tooltip> {
     }
 }
 
-fn item_key(host: &dyn ClientHost, id: &str) -> Option<ItemKey> {
-    host.item_key(&Identifier::parse(id).ok()?)
-}
+use crate::kit::lang::item_key;
 
 fn look_block(host: &dyn ClientHost, pos: [i32; 3], state: BlockState) -> Tooltip {
     let block = state.block();
@@ -409,7 +407,7 @@ impl Tooltip {
         let origin = [x, MARGIN];
         // Right-to-left languages mirror the box: icon on the right, lines right-aligned,
         // item rows and the bar filling from the right. `flip` maps an LTR box x to its place.
-        let rtl = right_to_left(host);
+        let rtl = crate::kit::rtl::right_to_left(host);
         let flip = |x: f32, width: f32| if rtl { w - x - width } else { x };
 
         // The size setting goes through the GUI pose, which applies only inside one `gui_paint`
@@ -498,25 +496,6 @@ impl Tooltip {
     }
 }
 
-/// Whether the player's language reads right to left. The game gives no direction flag, so
-/// this asks the language's own name (`language.name`, "العربية") and takes its first strong
-/// letter's direction, as Unicode's paragraph rule does: no list of languages to keep.
-fn right_to_left(host: &dyn ClientHost) -> bool {
-    host.translate("language.name").is_some_and(|name| starts_rtl(&name))
-}
-
-/// The direction of the first letter: true for the right-to-left scripts' blocks.
-fn starts_rtl(text: &str) -> bool {
-    text.chars().find(|c| c.is_alphabetic()).is_some_and(|c| {
-        matches!(c as u32,
-            0x0590..=0x08FF      // Hebrew, Arabic, Syriac, Thaana, NKo, Samaritan, Mandaic
-            | 0xFB1D..=0xFDFF    // Hebrew and Arabic presentation forms A
-            | 0xFE70..=0xFEFF    // Arabic presentation forms B
-            | 0x10800..=0x10FFF  // historic right-to-left scripts
-            | 0x1E800..=0x1EFFF) // Mende Kikakui, Adlam, Arabic mathematical
-    })
-}
-
 /// One `gui_paint` buffer drawn in box pixels: it opens with a pose that moves the box to
 /// `origin` (screen pixels) and scales it, and closes the pose at the end.
 struct Painter {
@@ -564,17 +543,6 @@ impl Painter {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn direction_follows_the_first_letter() {
-        assert!(starts_rtl("العربية"));
-        assert!(starts_rtl("עברית"));
-        assert!(starts_rtl("فارسی"));
-        assert!(!starts_rtl("English"));
-        assert!(!starts_rtl("Français"));
-        assert!(!starts_rtl("日本語"));
-        assert!(!starts_rtl(""));
-    }
 
     #[test]
     fn a_trade_row_reads_costs_arrow_result() {

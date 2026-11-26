@@ -1,6 +1,6 @@
 [package]
 name = "mod-jade"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2024"
 license = "CC-BY-NC-SA-4.0"
 
@@ -8,3 +8,6 @@ license = "CC-BY-NC-SA-4.0"
 # The pinned SDK's API crate, fetched into .horizon/sdk/ by any `cargo horizon-mod` command.
 horizon-mod-api = { path = ".horizon/sdk/api/crates/horizon-mod-api" }
 
+[lints.rust]
+# `kit_local`: set for local builds by horizon-mods/.cargo/config.toml (Kit's source in place).
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kit_local)'] }

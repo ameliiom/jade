@@ -1,6 +1,6 @@
 id = "jade"
 name = "Jade"
-version = "0.4.0"
+version = "0.4.1"
 description = "Shows what you are looking at: the block or entity under the crosshair, its mod, health, growth, contents and more. Arabic and right-to-left languages included."
 authors = ["ameliiom"]
 credits = "Adapted from Jade by Snownee and contributors and from jade-horizon by Pierddev (CC BY-NC-SA 4.0)."
@@ -9,6 +9,10 @@ license_url = "https://creativecommons.org/licenses/by-nc-sa/4.0/"
 api = "0.2"
 side = "both"
 capabilities = ["registries"]
+
+[dependencies]
+# The shared code of ameliiom's mods (settings, comforts, inventory, outline, ...).
+kit = "^0.1"
 
 [native]
 game = "26.3"

@@ -1,24 +1,25 @@
 //! The mod's options, shown in Options > Mods > Jade for Horizon > Config (Horizon builds the
 //! screen from these specs), and the theme palettes.
+use crate::kit::setting::{Number, Toggle};
 use mod_api::{ClientHost, SettingSpec};
 
 /// A line toggle: setting key, on by default.
-pub const MOD_NAME: &str = "show_mod_name";
-pub const HEALTH: &str = "show_health";
-pub const GROWTH: &str = "show_growth";
-pub const MINING: &str = "show_mining";
-pub const HARVEST: &str = "show_harvest";
-pub const BLOCK_STATES: &str = "show_block_states";
-pub const WORK: &str = "show_work";
-pub const CONTAINERS: &str = "show_containers";
-pub const ANIMALS: &str = "show_animals";
-pub const MOUNTS: &str = "show_mounts";
-pub const OWNER: &str = "show_owner";
-pub const VILLAGERS: &str = "show_villagers";
-pub const TRADES: &str = "show_trades";
-pub const EFFECTS: &str = "show_effects";
+pub const MOD_NAME: Toggle = Toggle::on("show_mod_name");
+pub const HEALTH: Toggle = Toggle::on("show_health");
+pub const GROWTH: Toggle = Toggle::on("show_growth");
+pub const MINING: Toggle = Toggle::on("show_mining");
+pub const HARVEST: Toggle = Toggle::on("show_harvest");
+pub const BLOCK_STATES: Toggle = Toggle::on("show_block_states");
+pub const WORK: Toggle = Toggle::on("show_work");
+pub const CONTAINERS: Toggle = Toggle::on("show_containers");
+pub const ANIMALS: Toggle = Toggle::on("show_animals");
+pub const MOUNTS: Toggle = Toggle::on("show_mounts");
+pub const OWNER: Toggle = Toggle::on("show_owner");
+pub const VILLAGERS: Toggle = Toggle::on("show_villagers");
+pub const TRADES: Toggle = Toggle::on("show_trades");
+pub const EFFECTS: Toggle = Toggle::on("show_effects");
 
-const TOGGLES: &[&str] = &[
+const TOGGLES: &[Toggle] = &[
     MOD_NAME,
     HEALTH,
     GROWTH,
@@ -37,7 +38,7 @@ const TOGGLES: &[&str] = &[
 
 const THEME: &str = "theme";
 const POSITION: &str = "position";
-const SCALE: &str = "scale";
+const SCALE: Number = Number { key: "scale", min: 0.5, max: 2.0, step: 0.1, default: 1.0 };
 
 pub fn specs() -> Vec<SettingSpec> {
     let mut specs = vec![
@@ -54,21 +55,19 @@ pub fn specs() -> Vec<SettingSpec> {
                 .map(|p| format!("jade.config.position.{p}")),
             0,
         ),
-        SettingSpec::range(SCALE, "jade.config.scale", 0.5, 2.0, 0.1, 1.0),
+        SCALE.spec(crate::MOD_ID),
     ];
-    for key in TOGGLES {
-        specs.push(SettingSpec::toggle(*key, format!("jade.config.{key}"), true));
-    }
+    specs.extend(TOGGLES.iter().map(|t| t.spec(crate::MOD_ID)));
     specs
 }
 
 /// Whether a line toggle is on (on when the setting can't be read).
-pub fn on(host: &dyn ClientHost, key: &str) -> bool {
-    host.setting_bool(key).unwrap_or(true)
+pub fn on(host: &dyn ClientHost, key: Toggle) -> bool {
+    key.read_client(host)
 }
 
 pub fn scale(host: &dyn ClientHost) -> f32 {
-    host.setting_f64(SCALE).unwrap_or(1.0).clamp(0.5, 2.0) as f32
+    SCALE.read_client(host) as f32
 }
 
 /// Where the box goes along the top of the screen.
